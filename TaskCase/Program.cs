@@ -1,6 +1,7 @@
 using HospitalManagement.Persistence;
 using Microsoft.EntityFrameworkCore;
 using TaskCase.Application;
+using TaskCase.Domain.Entities;
 using TaskCase.Extensions.StartupExtensions;
 using TaskCase.Persistence.Context;
 
@@ -26,7 +27,32 @@ builder.Services.SwaggerOptionsExtension();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+
 var app = builder.Build();
+
+
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+    db.Database.Migrate();
+
+    if (!db.Products.Any())
+    {
+        db.Products.Add(new Product
+        {
+            Name = "Kalem 1",
+            Price = 100,
+            Stock = 100,
+            CreatedDate = DateTime.UtcNow,
+            Guid = Guid.NewGuid(),
+            UpdatedDate = DateTime.UtcNow,
+        });
+        db.SaveChanges();
+    }
+}
+
+
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -36,8 +62,6 @@ if (app.Environment.IsDevelopment())
     {
         c.SwaggerEndpoint("/swagger/taskCase_V1/swagger.json", "TaskCase V1");
     });
-
-    //app.UseSwaggerUI();
 }
 app.UseDeveloperExceptionPage();
 
